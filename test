@@ -1,0 +1,34 @@
+import paho.mqtt.client as mqtt
+
+# MQTT Broker settings
+broker_address = "192.168.100.8"  # IP address of your Raspberry Pi
+broker_port = 1883
+
+# Callback function when a message is received
+def on_message(client, userdata, message):
+    print(f"Message received on topic '{message.topic}': {message.payload.decode()}")
+
+# Create a new MQTT client instance
+client = mqtt.Client()
+
+# Assign the callback function to the client
+client.on_message = on_message
+
+# Connect to the MQTT broker
+client.connect(broker_address, broker_port)
+
+# Subscribe to multiple topics
+client.subscribe("esp32/talking")
+client.subscribe("esp32/numbers")
+
+# Start the loop to process incoming messages
+client.loop_start()
+
+try:
+    # Keep the script running
+    while True:
+        pass  # You can add other logic here if needed
+except KeyboardInterrupt:
+    print("Exiting...")
+    client.loop_stop()  # Stop the loop
+    client.disconnect()  # Disconnect from the broker
