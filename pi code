@@ -1,7 +1,8 @@
 import paho.mqtt.client as mqtt
+import time
 
 # MQTT Broker settings
-broker_address = "192.168.100.200"  # Your Raspberry Pi IP
+broker_address = "192.168.100.200"  # IP address of your Raspberry Pi
 broker_port = 1883
 
 # Variables for data storage
@@ -16,13 +17,13 @@ def on_message(client, userdata, message):
     payload = message.payload.decode()
 
     if message.topic == "AQI/3um":
-        pm03um = payload
+        pm03um = int(payload)  # Convert payload to int
     elif message.topic == "AQI/5um":
-        pm05um = payload
+        pm05um = int(payload)  # Convert payload to int
     elif message.topic == "AQI/10um":
-        pm10um = payload
+        pm10um = int(payload)  # Convert payload to int
     elif message.topic == "AQI/25um":
-        pm25um = payload
+        pm25um = int(payload)  # Convert payload to int
 
 # Create a new MQTT client instance
 client = mqtt.Client()
@@ -44,9 +45,14 @@ client.loop_start()
 
 try:
     while True:
-        print(pm03um)  # Adjust this as needed
-        time.sleep(0.5)
+        # Print received data for each PM level
+        print("PM 0.3 um:", pm03um)
+        print("PM 0.5 um:", pm05um)
+        print("PM 1.0 um:", pm10um)
+        print("PM 2.5 um:", pm25um)
+        time.sleep(1)  # Adjust the sleep time as necessary
 except KeyboardInterrupt:
     print("Exiting...")
-    client.loop_stop()
-    client.disconnect()
+finally:
+    client.loop_stop()  # Stop the loop
+    client.disconnect()  # Disconnect from the broker
