@@ -7,9 +7,6 @@ broker_port = 1883
 # Create a new MQTT client instance
 client = mqtt.Client()
 
-# Assign the callback function to the client
-client.on_message = on_message
-
 # Connect to the MQTT broker
 client.connect(broker_address, broker_port)
 
