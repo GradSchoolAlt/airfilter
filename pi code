@@ -1,28 +1,28 @@
 import paho.mqtt.client as mqtt
 
 # MQTT Broker settings
-broker_address = "192.168.100.200"  # IP address of your Raspberry Pi
+broker_address = "192.168.100.200"  # Your Raspberry Pi IP
 broker_port = 1883
 
-#variables for data storage
+# Variables for data storage
 pm03um = None
 pm05um = None
-Pm10um = None
+pm10um = None
 pm25um = None
 
 # Callback function for when a message is received
 def on_message(client, userdata, message):
-        global pm03um, pm05um, pm10um, pm25um
-        payload = message.payload.decode()
+    global pm03um, pm05um, pm10um, pm25um
+    payload = message.payload.decode()
 
-        if message.topic == "AQI/3um":
-                pm03um = payload
-        elif message.topic == "AQI/5um":
-                pm05um = payload
-        elif message.topic == "AQI/10um":
-                pm10um = payload
-        elif message.topic == "AQI/25um":
-                pm25um = payload
+    if message.topic == "AQI/3um":
+        pm03um = payload
+    elif message.topic == "AQI/5um":
+        pm05um = payload
+    elif message.topic == "AQI/10um":
+        pm10um = payload
+    elif message.topic == "AQI/25um":
+        pm25um = payload
 
 # Create a new MQTT client instance
 client = mqtt.Client()
@@ -34,7 +34,7 @@ client.on_message = on_message
 client.connect(broker_address, broker_port)
 
 # Subscribe to multiple topics
-     client.subscribe("AQI/3um")
+client.subscribe("AQI/3um")
 client.subscribe("AQI/5um")
 client.subscribe("AQI/10um")
 client.subscribe("AQI/25um")
@@ -43,11 +43,10 @@ client.subscribe("AQI/25um")
 client.loop_start()
 
 try:
-    # Keep the script running
     while True:
-        print(pm03um)
-        time.sleep(.5)
+        print(pm03um)  # Adjust this as needed
+        time.sleep(0.5)
 except KeyboardInterrupt:
     print("Exiting...")
-    client.loop_stop()  # Stop the loop
-    client.disconnect()  # Disconnect from the broker
+    client.loop_stop()
+    client.disconnect()
