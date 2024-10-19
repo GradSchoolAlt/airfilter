@@ -1,58 +1,45 @@
 import paho.mqtt.client as mqtt
-import time
 
-# MQTT Broker settings
-broker_address = "192.168.100.200"  # IP address of your Raspberry Pi
-broker_port = 1883
+# MQTT Broker details
+broker = 'your_mqtt_broker_ip'
+port = 1883  # Typically 1883 for non-secure connections
 
-# Variables for data storage
-pm03um = None
-pm05um = None
-pm10um = None
-pm25um = None
+# MQTT topics
+topics = ["pm03", "pm05", "pm10", "pm25", "pm50"]
 
 # Callback function for when a message is received
 def on_message(client, userdata, message):
-    global pm03um, pm05um, pm10um, pm25um
-    payload = message.payload.decode()
+    try:
+        # Decode the message payload and convert it to an integer
+        payload = message.payload.decode('utf-8')
+        value = int(payload)
+        print(f"Received message on {message.topic}: {value}")
+    except ValueError:
+        print(f"Invalid message on {message.topic}: {payload}")
 
-    if message.topic == "AQI/3um":
-        pm03um = int(payload)  # Convert payload to int
-    elif message.topic == "AQI/5um":
-        pm05um = int(payload)  # Convert payload to int
-    elif message.topic == "AQI/10um":
-        pm10um = int(payload)  # Convert payload to int
-    elif message.topic == "AQI/25um":
-        pm25um = int(payload)  # Convert payload to int
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT broker!")
+        # Subscribe to all topics once connected
+        for topic in topics:
+            client.subscribe(topic)
+            print(f"Subscribed to {topic}")
+    else:
+        print(f"Failed to connect, return code {rc}")
 
-# Create a new MQTT client instance
-client = mqtt.Client()
+def main():
+    # Initialize MQTT client
+    client = mqtt.Client()
 
-# Assign the callback function to the client
-client.on_message = on_message
+    # Attach callback functions
+    client.on_message = on_message
+    client.on_connect = on_connect
 
-# Connect to the MQTT broker
-client.connect(broker_address, broker_port)
+    # Connect to the MQTT broker
+    client.connect(broker, port)
 
-# Subscribe to multiple topics
-client.subscribe("AQI/3um")
-client.subscribe("AQI/5um")
-client.subscribe("AQI/10um")
-client.subscribe("AQI/25um")
+    # Start the MQTT client loop to process messages
+    client.loop_forever()
 
-# Start the loop to process incoming messages
-client.loop_start()
-
-try:
-    while True:
-        # Print received data for each PM level
-        print("PM 0.3 um:", pm03um)
-        print("PM 0.5 um:", pm05um)
-        print("PM 1.0 um:", pm10um)
-        print("PM 2.5 um:", pm25um)
-        time.sleep(1)  # Adjust the sleep time as necessary
-except KeyboardInterrupt:
-    print("Exiting...")
-finally:
-    client.loop_stop()  # Stop the loop
-    client.disconnect()  # Disconnect from the broker
+if __name__ == "__main__":
+    main()
