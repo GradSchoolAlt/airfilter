@@ -1,0 +1,3 @@
+(venv) pitime@raspberrypi:~/mqtt_airfilter $ python3 test.py
+/home/pitime/mqtt_airfilter/test.py:31: DeprecationWarning: Callback API version 1 is deprecated, update to latest version
+  client = mqtt.Client()
