@@ -15,8 +15,9 @@ def on_message(client, userdata, message):
         value = int(payload)
         print(f"Received message on {message.topic}: {value}")
     except ValueError:
-        print(f"Invalid message on {message.topic}: {payload}")
+        print(f"Invalid message on {message.topic}: {message.payload.decode('utf-8')}")
 
+# Callback function for when the client connects to the broker
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to MQTT broker!")
@@ -27,19 +28,39 @@ def on_connect(client, userdata, flags, rc):
     else:
         print(f"Failed to connect, return code {rc}")
 
+# Callback function for logging any issues with the connection
+def on_log(client, userdata, level, buf):
+    print(f"Log: {buf}")
+
+# Callback function for handling disconnection
+def on_disconnect(client, userdata, rc):
+    if rc != 0:
+        print(f"Unexpected disconnection, return code {rc}")
+
 def main():
-    # Initialize MQTT client
-    client = mqtt.Client()
+    # Initialize MQTT client using MQTT version 3.1.1
+    client = mqtt.Client(protocol=mqtt.MQTTv311)
 
     # Attach callback functions
     client.on_message = on_message
     client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    client.on_log = on_log
 
-    # Connect to the MQTT broker
-    client.connect(broker, port)
+    try:
+        # Connect to the MQTT broker
+        client.connect(broker, port)
+    except Exception as e:
+        print(f"Error connecting to MQTT broker: {e}")
+        return
 
     # Start the MQTT client loop to process messages
-    client.loop_forever()
+    try:
+        client.loop_forever()
+    except KeyboardInterrupt:
+        print("Program interrupted by user")
+    except Exception as e:
+        print(f"Error running MQTT loop: {e}")
 
 if __name__ == "__main__":
     main()
