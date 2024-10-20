@@ -30,6 +30,22 @@ def on_message(client, userdata, message):
             avg_value = sum(data_storage[topic]) / 20
             print(f"Average for {topic} (last 20 values): {avg_value}")
 
+            if sum(data_storage["AQI/03um"]) > 600:
+                client.publish("AQI/control", "ON")
+                print("Published 'ON' due to AQI/03um threshold")
+            elif sum(data_storage["AQI/05um"]) > 100:
+                client.publish("AQI/control", "ON")
+                print("Published 'ON' due to AQI/05um threshold")
+            elif sum(data_storage["AQI/10um"]) > 3:
+                client.publish("AQI/control", "ON")
+                print("Published 'ON' due to AQI/10um threshold")
+            elif sum(data_storage["AQI/25um"]) > 1:
+                client.publish("AQI/control", "ON")
+                print("Published 'ON' due to AQI/25um threshold")
+            else:
+                client.publish("AQI/control", "OFF")
+                print("Published 'OFF' as all AQI values are below thresholds")
+
     except ValueError:
         print(f"Invalid message on {message.topic}: {message.payload.decode('utf-8')}")
 
