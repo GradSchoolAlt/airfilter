@@ -1,0 +1,70 @@
+import paho.mqtt.client as mqtt
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+broker = '192.168.100.200'
+port = 1883
+
+topics = ["AQI/03um", "AQI/05um", "AQI/10um", "AQI/25um"]
+
+data_storage = {
+    "AQI/03um": [],
+    "AQI/05um": [],
+    "AQI/10um": [],
+    "AQI/25um": []
+}
+
+def on_message(client, userdata, message):
+    try:
+        payload = message.payload.decode('utf-8')
+        value = int(payload)
+        topic = message.topic
+
+        data_storage[topic].append(value)
+
+        if len(data_storage[topic]) > 20:
+            data_storage[topic].pop(0)
+
+        if len(data_storage[topic]) == 20:
+            avg_value = sum(data_storage[topic]) / 20
+            print(f"Average for {topic} (last 20 values): {avg_value}")
+
+    except ValueError:
+        print(f"Invalid message on {message.topic}: {message.payload.decode('utf-8')}")
+
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        print("Connected to MQTT broker!")
+        for topic in topics:
+            client.subscribe(topic)
+            print(f"Subscribed to {topic}")
+    else:
+        print(f"Failed to connect, return code {rc}")
+
+def on_disconnect(client, userdata, rc):
+    if rc != 0:
+        print(f"Unexpected disconnection, return code {rc}")
+
+def main():
+    client = mqtt.Client(protocol=mqtt.MQTTv311)
+    client.on_message = on_message
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+
+    try:
+        client.connect(broker, port)
+    except Exception as e:
+        print(f"Error connecting to MQTT broker: {e}")
+        return
+
+    try:
+        client.loop_forever()
+    except KeyboardInterrupt:
+        print("Program interrupted by user")
+    except Exception as e:
+        print(f"Error running MQTT loop: {e}")
+
+if __name__ == "__main__":
+    main()
+
